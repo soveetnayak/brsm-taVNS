@@ -1,0 +1,592 @@
+---
+title: "project_v2"
+output: pdf_document
+date: "2023-04-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#libraries
+library(readxl)
+library(ggplot2)
+library(sjPlot)
+library(lme4)
+library(psych)
+```
+
+```{r}
+data <- read_xlsx('./Data/taVNS.xlsx')
+print(data)
+```
+```{r}
+# Count the number of rows per ID
+id_counts <- table(data$ID)
+
+# Get the IDs with 96 rows
+ids_to_keep <- names(id_counts[id_counts == 96])
+
+# Subset the data
+subset_data <- data[data$ID %in% ids_to_keep,]
+data <- subset_data
+print(data)
+```
+
+```{r}
+# Assuming your dataset is called `data` and contains the variables `StimCond`, `Win`, `Food`, and `RewM`
+
+# For Food
+stim_0_win_food <- data$Win[data$StimCond == 0 & data$Food == 1]
+stim_1_win_food <- data$Win[data$StimCond == 1 & data$Food == 1]
+
+t_test_food <- t.test(stim_1_win_food, stim_0_win_food)
+t_test_food
+```
+
+```{r}
+# For RewM
+stim_0_win_rewm <- data$Win[data$StimCond == 0 & data$Food == 0]
+stim_1_win_rewm <- data$Win[data$StimCond == 1 & data$Food == 0]
+
+t_test_rewm <- t.test(stim_1_win_rewm, stim_0_win_rewm)
+t_test_rewm
+```
+```{r}
+stim_0 <- data$Rating_want[data$StimCond == 0]
+stim_1 <- data$Rating_want[data$StimCond == 1]
+
+t_test_rewm <- t.test(stim_1, stim_0)
+t_test_rewm
+```
+
+```{r}
+# Assuming your dataset is called `data` and contains the variables `StimCond`, `Win`, `StimSide`
+
+# For StimSide == 0
+stim_0_win_0 <- data$Win[data$StimCond == 0 & data$StimSide == 0]
+stim_1_win_0 <- data$Win[data$StimCond == 1 & data$StimSide == 0]
+
+t_test_0 <- t.test(stim_1_win_0, stim_0_win_0)
+t_test_0
+
+# For StimSide == 1
+stim_0_win_1 <- data$Win[data$StimCond == 0 & data$StimSide == 1]
+stim_1_win_1 <- data$Win[data$StimCond == 1 & data$StimSide == 1]
+
+t_test_1 <- t.test(stim_1_win_1, stim_0_win_1)
+t_test_1
+```
+
+```{r}
+# Assuming your dataset is called `data` and contains the variables `Diff`, `RewM`, and `S_InvSlope`
+
+# Filter data by difficulty and rewm
+data_75_0 <- data[data$Diff == 75.00 & data$RewM == 0, ]
+data_75_1 <- data[data$Diff == 75.00 & data$RewM == 1, ]
+data_85_0 <- data[data$Diff == 85.00 & data$RewM == 0, ]
+data_85_1 <- data[data$Diff == 85.00 & data$RewM == 1, ]
+
+# Calculate mean invigoration slope for each group
+mean_slope_75_0 <- mean(data_75_0$S_InvSlope)
+mean_slope_75_1 <- mean(data_75_1$S_InvSlope)
+mean_slope_85_0 <- mean(data_85_0$S_InvSlope)
+mean_slope_85_1 <- mean(data_85_1$S_InvSlope)
+
+# Create bar plot
+barplot(c(mean_slope_75_0, mean_slope_75_1, mean_slope_85_0, mean_slope_85_1),
+        names.arg = c("75.00-0", "75.00-1", "85.00-0", "85.00-1"),
+        xlab = "Difficulty-RewM",
+        ylab = "Invigoration Slope",
+        col = c("steelblue", "darkorange", "steelblue", "darkorange"),
+        main = "Mean Invigoration Slope by Difficulty and RewM")
+
+
+```
+
+```{r}
+# Assuming your dataset is called `data` and contains the variables `Diff`, `RewM`, and `RelFreq`
+
+# Filter data by difficulty and rewm
+data_75_0 <- data[data$Diff == 75.00 & data$RewM == 0, ]
+data_75_1 <- data[data$Diff == 75.00 & data$RewM == 1, ]
+data_85_0 <- data[data$Diff == 85.00 & data$RewM == 0, ]
+data_85_1 <- data[data$Diff == 85.00 & data$RewM == 1, ]
+
+# Calculate mean relative frequency for each group
+mean_freq_75_0 <- mean(data_75_0$RelFreq)
+mean_freq_75_1 <- mean(data_75_1$RelFreq)
+mean_freq_85_0 <- mean(data_85_0$RelFreq)
+mean_freq_85_1 <- mean(data_85_1$RelFreq)
+
+# Create bar plot
+barplot(c(mean_freq_75_0, mean_freq_75_1, mean_freq_85_0, mean_freq_85_1),
+        names.arg = c("75.00-0", "75.00-1", "85.00-0", "85.00-1"),
+        xlab = "Difficulty-RewM",
+        ylab = "Relative Frequency",
+        col =  c("forestgreen", "firebrick", "forestgreen", "firebrick"),
+        main = "Mean Relative Frequency by Difficulty and RewM")
+
+```
+
+```{r}
+# Assuming your dataset is called `data` and contains the variables `Diff`, `RewM`, and `S_InvSlope`
+
+# Filter data by food and rewm
+data_food_0 <- data[data$Food == 0 & data$RewM == 0, ]
+data_food_1 <- data[data$Food == 1 & data$RewM == 0, ]
+data_food_2 <- data[data$Food == 0 & data$RewM == 1, ]
+data_food_3 <- data[data$Food == 1 & data$RewM == 1, ]
+
+# Calculate mean invigoration slope for each group
+mean_slope_food_0 <- mean(data_food_0$S_InvSlope)
+mean_slope_food_1 <- mean(data_food_1$S_InvSlope)
+mean_slope_food_2 <- mean(data_food_2$S_InvSlope)
+mean_slope_food_3 <- mean(data_food_3$S_InvSlope)
+
+# Create bar plot
+barplot(c(mean_slope_food_0, mean_slope_food_1, mean_slope_food_2, mean_slope_food_3),
+        names.arg = c("Food-0_RewM-0", "Food-1_RewM-0", "Food-0_RewM-1", "Food-1_RewM-1"),
+        xlab = "Food-RewM",
+        ylab = "Invigoration Slope",
+        col = c("steelblue", "darkorange", "steelblue", "darkorange"),
+        main = "Mean Invigoration Slope by Food and RewM")
+
+```
+
+```{r}
+# Assuming your dataset is called `data` and contains the variables `Food`, `RewM`, and `RelFreq`
+
+# Filter data by food and rewm
+data_food_0 <- data[data$Food == 0 & data$RewM == 0, ]
+data_food_1 <- data[data$Food == 1 & data$RewM == 0, ]
+data_food_2 <- data[data$Food == 0 & data$RewM == 1, ]
+data_food_3 <- data[data$Food == 1 & data$RewM == 1, ]
+
+# Calculate mean relative frequency for each group
+mean_freq_food_0 <- mean(data_food_0$RelFreq)
+mean_freq_food_1 <- mean(data_food_1$RelFreq)
+mean_freq_food_2 <- mean(data_food_2$RelFreq)
+mean_freq_food_3 <- mean(data_food_3$RelFreq)
+
+# Create bar plot
+barplot(c(mean_freq_food_0, mean_freq_food_1, mean_freq_food_2, mean_freq_food_3),
+        names.arg = c("Food-0_RewM-0", "Food-1_RewM-0", "Food-0_RewM-1", "Food-1_RewM-1"),
+        xlab = "Food-RewM",
+        ylab = "Relative Frequency",
+        col =  c("forestgreen", "firebrick", "forestgreen", "firebrick"),
+        main = "Mean Relative Frequency by Food and RewM")
+```
+
+```{r}
+# Assuming your dataset is called `data` and contains the variables `S_InvSlope`, `Freq`, `Rating_exh`, and `Rating_want`
+
+# Fit linear models to the data for each rating variable
+lm_exh <- lm(Rating_exh ~ S_InvSlope + Freq, data = data)
+lm_want <- lm(Rating_want ~ S_InvSlope + Freq, data = data)
+
+# Extract the coefficients for each rating variable
+coef_exh <- coef(lm_exh)[-1]
+coef_want <- coef(lm_want)[-1]
+
+# Define the colors for the plot
+colors <- c("dodgerblue2", "firebrick")
+
+# Create a bar plot of the coefficients for exertion ratings
+barplot(coef_exh, col = colors[1], ylim = c(-1, 1),
+        ylab = "Coefficient Value", main = "Regression Coefficients of Exertion Ratings",
+        names.arg = c("Invigoration (S_InvSlope)", "Effort Maintenance (Freq)"))
+
+# Create a bar plot of the coefficients for wanting ratings
+barplot(coef_want, col = colors[2], ylim = c(-1, 1),
+        ylab = "Coefficient Value", main = "Regression Coefficients of Wanting Ratings",
+        names.arg = c("Invigoration (S_InvSlope)", "Effort Maintenance (Freq)"))
+
+```
+a Participants were quicker to invigorate if more reward was at stake, p < 0.001, and slower if difﬁculty was high, p = 0.002. 
+b Participants exerted more effort when more reward was at stake, p < 0.001, and less when it became more difﬁcult to obtain it, p < 0.001. Moreover, they worked more for difﬁcult reward when the magnitude was high, p < 0.001. 
+c Food and monetary rewards elicited comparable invigoration, p = 0.45. 
+d Food and monetary rewards elicited similar investment of effort, p = 0.45.
+```{r}
+# Fit the mixed-effects model for stimcond = 0
+model_stim0 <- lmer(Win ~ Freq + Work + S_InvSlope + Rating_exh + Rating_want + (1 | ID), data = subset(data, StimCond == 0))
+
+# Check the summary of the model for stimcond = 0
+summary(model_stim0)
+
+# Plot the predicted values of win by stimcond = 0
+plot_model(model_stim0, type = "pred", terms = c("Freq", "S_InvSlope"), axis.title = c("Frequency", "Invigoration"),
+           show.values = TRUE, title = "Predicted values of win for StimCond = 0")
+```
+
+```{r}
+# Fit the mixed-effects model for stimcond = 1
+model_stim1 <- lmer(Win ~ RelFreq + Work + S_InvSlope + (1 | ID), data = subset(data, StimCond == 1))
+
+# Check the summary of the model for stimcond = 1
+summary(model_stim1)
+
+# Plot the predicted values of win by stimcond = 1
+plot_model(model_stim1, type = "pred", terms = c("RelFreq", "S_InvSlope"), axis.title = c("Frequency", "Invigoration"),
+           show.values = TRUE, title = "Predicted values of win for StimCond = 1")
+```
+
+```{r}
+# Fit the mixed-effects model for stimcond = 1
+model <- lmer(Win ~ Freq + Work + S_InvSlope + Rating_exh + Rating_want + (1 | ID), data = data)
+
+# Check the summary of the model for stimcond = 1
+summary(model)
+
+# Plot the predicted values of win by stimcond = 1
+plot_model(model, type = "pred", terms = c("Freq", "S_InvSlope"), axis.title = c("Frequency", "Invigoration"),
+           show.values = TRUE, title = "Predicted values of win")
+```
+
+```{r}
+
+# filter the data for left and right ears
+df_left <- subset(data, StimSide == 0)
+df_right <- subset(data, StimSide == 1)
+
+# create the four groups based on Food and StimCond variables for left ear
+df_left_food_0 <- subset(df_left, Food == 0 & StimCond == 0)
+df_left_money_0 <- subset(df_left, Food == 0 & StimCond == 1)
+df_left_food_1 <- subset(df_left, Food == 1 & StimCond == 0)
+df_left_money_1 <- subset(df_left, Food == 1 & StimCond == 1)
+
+# create the four groups based on Food and StimCond variables for right ear
+df_right_food_0 <- subset(df_right, Food == 0 & StimCond == 0)
+df_right_money_0 <- subset(df_right, Food == 0 & StimCond == 1)
+df_right_food_1 <- subset(df_right, Food == 1 & StimCond == 0)
+df_right_money_1 <- subset(df_right, Food == 1 & StimCond == 1)
+
+# calculate mean invigoration slope for each group for left ear
+mean_inv_slope_left <- c(mean(df_left_food_0$S_InvSlope),
+                         mean(df_left_money_0$S_InvSlope),
+                         mean(df_left_food_1$S_InvSlope),
+                         mean(df_left_money_1$S_InvSlope))
+
+# calculate mean invigoration slope for each group for right ear
+mean_inv_slope_right <- c(mean(df_right_food_0$S_InvSlope),
+                          mean(df_right_money_0$S_InvSlope),
+                          mean(df_right_food_1$S_InvSlope),
+                          mean(df_right_money_1$S_InvSlope))
+
+# create the bar plot for left and right ears
+par(mfrow=c(1,2)) # set up the plot layout with 2 columns
+barplot(mean_inv_slope_left, names.arg = c("Food_0","Money_0","Food_1", "Money_1"),
+        ylab = "Mean Invigoration Slope", xlab = "Reward Type and Stimulation Condition",
+        main = "Left Ear",col =  c("blue", "firebrick", "blue", "firebrick"))
+barplot(mean_inv_slope_right, names.arg = c("Food_0","Money_0",  "Food_1", "Money_1"),
+        ylab = "Mean Invigoration Slope", xlab = "Reward Type and Stimulation Condition",
+        main = "Right Ear",col =  c("blue", "firebrick", "blue", "firebrick"))
+
+# add a title for the entire plot
+mtext("Mean Invigoration Slope by Reward Type and Stimulation Condition", side = 3, line = 2.5)
+```
+
+```{r}
+
+# calculate Relative Frequency for each group for left ear
+mean_freq_left <- c(mean(df_left_food_0$RelFreq),
+                         mean(df_left_money_0$RelFreq),
+                         mean(df_left_food_1$RelFreq),
+                         mean(df_left_money_1$RelFreq))
+
+# calculate Relative Frequency for each group for right ear
+mean_freq_right <- c(mean(df_right_food_0$RelFreq),
+                          mean(df_right_money_0$RelFreq),
+                          mean(df_right_food_1$RelFreq),
+                          mean(df_right_money_1$RelFreq))
+
+# create the bar plot for left and right ears
+par(mfrow=c(1,2)) # set up the plot layout with 2 columns
+barplot(mean_freq_left, names.arg = c("Food_0","Money_0","Food_1", "Money_1"),
+        ylab = "Relative Frequency", xlab = "Reward Type and Stimulation Condition",
+        main = "Left Ear",col =  c("blue", "firebrick", "blue", "firebrick"))
+barplot(mean_freq_right, names.arg = c("Food_0","Money_0",  "Food_1", "Money_1"),
+        ylab = "Relative Frequency", xlab = "Reward Type and Stimulation Condition",
+        main = "Right Ear",col =  c("blue", "firebrick", "blue", "firebrick"))
+
+# add a title for the entire plot
+mtext("Relative Frequency by Reward Type and Stimulation Condition", side = 3, line = 2.5)
+```
+
+```{r}
+# Subset the data for stimcond=1
+subset_data <- subset(data, StimCond == 1)
+
+# Extract the Win values for left and right ear separately
+Win_left <- subset_data$Win[subset_data$StimSide == "0"]
+Win_right <- subset_data$Win[subset_data$StimSide == "1"]
+
+# Compute the difference in Win between left and right ear stimulation
+Win_diff <- Win_left - Win_right
+
+# Perform a one-sided paired t-test with the null hypothesis that Win_left - Win_right <= 0
+t.test(Win_diff, mu = 0, alternative = "greater", paired = FALSE)
+
+```
+```{r}
+# Perform a one-sided paired t-test with the null hypothesis that Win_left - Win_right <= 0
+t_test <- t.test(Win_diff, mu = 0, alternative = "greater", paired = FALSE)
+
+# Correct for multiple comparisons using the FDR method
+p_values <- t_test$p.value
+p_adjusted <- p.adjust(p_values, method = "fdr")
+
+# Print the adjusted p-values
+p_adjusted
+
+```
+
+```{r}
+subFood <- data[data$StimCond == 1 & data$Food == 1, ]
+
+# Extract the Win values for left and right ear separately
+Win_left <- subFood$Win[subFood$StimSide == "0"]
+Win_right <- subFood$Win[subFood$StimSide == "1"]
+
+# Compute the difference in Win between left and right ear stimulation
+Win_diff <- Win_left - Win_right
+
+# Perform a one-sided paired t-test with the null hypothesis that Win_left - Win_right <= 0
+t.test(Win_diff, mu = 0, alternative = "greater", paired = FALSE)
+```
+
+```{r}
+subMoney <- data[data$StimCond == 1 & data$Food == 0, ]
+
+# Extract the Win values for left and right ear separately
+Win_left <- subMoney$Win[subMoney$StimSide == "0"]
+Win_right <- subMoney$Win[subMoney$StimSide == "1"]
+
+# Compute the difference in Win between left and right ear stimulation
+Win_diff <- Win_left - Win_right
+
+# Perform a one-sided paired t-test with the null hypothesis that Win_left - Win_right <= 0
+t.test(Win_diff, mu = 0, alternative = "greater", paired = FALSE)
+```
+
+```{r}
+my_data$S_InvSlope <- as.numeric(my_data$S_InvSlope)
+hist(data$S_InvSlope)
+```
+
+```{r}
+# Perform ANOVA with S_InvSlope as the dependent variable
+model_S_InvSlope <- aov(S_InvSlope ~ StimSide * StimCond * Diff * RewM * Food, data = data)
+
+# Perform ANOVA with RelFreq as the dependent variable
+model_RelFreq <- aov(RelFreq ~ StimSide * StimCond * Diff * RewM * Food, data = data)
+
+# Print the ANOVA tables
+summary(model_S_InvSlope)
+
+summary(model_RelFreq)
+```
+```{r}
+library(ggplot2)
+
+# Extract the factor names and F values from the ANOVA table
+anova_table <- summary(model_S_InvSlope)
+factor_names <- rownames(anova_table[[1]])
+f_values <- anova_table[[1]][, "F value"]
+
+# Store the factor names and F values in a data frame
+df_factors_fvalues <- data.frame(factor_names, f_values)
+
+# Plot F-values
+ggplot(df_factors_fvalues, aes(x = factor_names, y = f_values)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(x = "Factor", y = "F-value", title = "ANOVA F-values") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.major.x = element_line(colour = "gray90", size = 0.5)) +
+  coord_flip()
+
+```
+```{r}
+library(ggplot2)
+
+# Extract the factor names and F values from the ANOVA table
+anova_table <- summary(model_RelFreq)
+factor_names <- rownames(anova_table[[1]])
+f_values <- anova_table[[1]][, "F value"]
+
+# Store the factor names and F values in a data frame
+df_factors_fvalues <- data.frame(factor_names, f_values)
+
+# Plot F-values
+ggplot(df_factors_fvalues, aes(x = factor_names, y = f_values)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(x = "Factor", y = "F-value", title = "ANOVA F-values") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.major.x = element_line(colour = "gray90", size = 0.5)) +
+  coord_flip()
+
+
+```
+```{r}
+# Convert StimCond to a factor variable with levels 0 and 1
+data$StimCond <- factor(data$StimCond, levels = c(0, 1))
+
+# Perform ANOVA with S_InvSlope as the dependent variable
+model_S_InvSlope <- aov(S_InvSlope ~ StimCond, data = data)
+
+# Print the ANOVA table
+summary(model_S_InvSlope)
+
+# Perform Bonferroni post hoc test
+posthoc_S_InvSlope <- TukeyHSD(model_S_InvSlope)
+
+# View post hoc test results
+posthoc_S_InvSlope
+
+
+```
+
+```{r}
+# Convert StimCond to a factor variable with levels 0 and 1
+data$StimCond <- factor(data$StimCond, levels = c(0, 1))
+
+# Perform ANOVA with S_InvSlope as the dependent variable
+model_RelFreq <- aov(RelFreq ~ StimCond, data = data)
+
+# Print the ANOVA table
+summary(model_RelFreq)
+
+# Perform Bonferroni post hoc test
+posthoc_RelFreq <- TukeyHSD(model_RelFreq)
+
+# View post hoc test results
+posthoc_RelFreq
+
+
+```
+```{r}
+# Convert StimCond to a factor variable with levels 0 and 1
+data$StimCond <- factor(data$StimCond, levels = c(0, 1))
+
+# Perform ANOVA with S_InvSlope as the dependent variable
+model_Work <- aov(Work ~ StimCond, data = data)
+
+# Print the ANOVA table
+summary(model_Work)
+
+# Perform Bonferroni post hoc test
+posthoc_Work <- TukeyHSD(model_Work)
+
+# View post hoc test results
+posthoc_Work
+
+
+```
+
+
+
+```{r}
+# Load the necessary package
+library(car)
+
+# Fit the MANOVA model
+model <- manova(cbind(S_InvSlope, RelFreq) ~ StimCond + StimSide + Food + Diff + RewM, data = data)
+
+# Print the results
+summary(model)
+
+```
+
+Mixed Effects Model
+```{r}
+data$StimCond <- as.factor(data$StimCond)
+data$RewM <- as.factor(data$RewM)
+data$Food <- as.factor(data$Food)
+data$Diff <- as.factor(data$Diff)
+
+# fit mixed-effects model
+model <- lmer(S_InvSlope ~ StimCond + RewM + Food + Diff + (1 | ID), data = data)
+summary(model)
+```
+
+Violin Plots
+```{r}
+# Load necessary libraries
+library(ggplot2)
+
+# Create a data frame with the variables of interest
+df <- data.frame(
+  StimCond = c(rep("0", 50), rep("1", 50)), # categorical predictor variable
+  rating_exh = rnorm(100, mean = 5, sd = 1), # continuous response variable 1
+  rating_want = rnorm(100, mean = 3, sd = 1) # continuous response variable 2
+)
+
+# Create the violin plot
+ggplot(df, aes(x = StimCond, y = rating_exh, fill = StimCond)) +
+  geom_violin(trim = FALSE) + # show full distribution
+  geom_jitter(shape = 21, position = position_jitter(0.1)) + # add jittered points
+  xlab("StimCond") +
+  ylab("Rating Exh") +
+  ggtitle("Distribution of Rating Exh by StimCond") +
+  theme_minimal()
+
+# Create the violin plot
+ggplot(df, aes(x = StimCond, y = rating_want, fill = StimCond)) +
+  geom_violin(trim = FALSE) + # show full distribution
+  geom_jitter(shape = 21, position = position_jitter(0.1)) + # add jittered points
+  xlab("StimCond") +
+  ylab("Rating Want") +
+  ggtitle("Distribution of Rating Want by StimCond") +
+  theme_minimal()
+
+```
+Here, we start with a model that only includes the intercept (model1). Then we add each predictor variable one at a time, using anova() to compare the models to the previous one. The output of anova() tells us whether the added variable improved the model's performance (i.e., whether it's a significant predictor of S_InvSlope).
+```{r}
+library(lme4)
+
+# Fit model with only intercept
+model1 <- lmer(S_InvSlope ~ 1 + (1|ID), data = data)
+
+# Add StimCond
+model2 <- lmer(S_InvSlope ~ StimCond + (1|ID), data = data)
+anova(model1, model2)
+
+# Add RewM
+model3 <- lmer(S_InvSlope ~ StimCond + RewM + (1|ID), data = data)
+anova(model2, model3)
+
+# Add Food
+model4 <- lmer(S_InvSlope ~ StimCond + RewM + Food + (1|ID), data = data)
+anova(model3, model4)
+
+# Add Diff
+model5 <- lmer(S_InvSlope ~ StimCond + RewM + Food + Diff + (1|ID), data = data)
+anova(model4, model5)
+
+```
+The output shows the results of a hierarchical mixed-effects modeling analysis.
+
+The first column indicates the models being compared, with the notation "model1" to "model5" representing increasingly complex models with additional predictor variables.
+
+The second column shows the number of parameters (npar) estimated in each model.
+
+The third and fourth columns display the Akaike information criterion (AIC) and Bayesian information criterion (BIC) values for each model, respectively. These criteria are used to compare the goodness of fit of different models, with lower values indicating a better fit.
+
+The fifth column reports the log-likelihood of each model, which is the maximum value of the likelihood function for each model. Higher log-likelihood values indicate a better fit.
+
+The sixth column shows the deviance, which is a measure of the goodness of fit of each model, with lower values indicating a better fit.
+
+The seventh column displays the chi-squared (Chisq) test statistic for comparing the model being tested to the previous model in the hierarchy. A significant p-value indicates that the additional predictor variable(s) significantly improved the fit of the model.
+
+The eighth column shows the degrees of freedom (Df) for the chi-squared test.
+
+The final column reports the p-value for the chi-squared test, indicating the statistical significance of the improvement in fit due to the addition of the predictor variable(s).
