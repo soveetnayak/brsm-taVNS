@@ -1,0 +1,877 @@
+---
+title: "Project_anmol"
+author: "Anmol"
+date: "2023-04-22"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#install.packages("lmerTest")
+#install.packages("zoo")
+#install.packages("ggpubr")
+#install.packages("mediation")
+#install.packages("effects")
+```
+
+```{r}
+#libraries
+library(readxl)
+library(ggplot2)
+library(sjPlot)
+library(lme4)
+library(psych)
+library(moments)
+library(MASS)
+library(reshape2)
+library(dplyr)
+library(zoo)
+library(lmerTest)
+library(sandwich)
+library(lmtest)
+library(effects)
+library(car)
+```
+
+```{r}
+data <- read_xlsx('./Data/taVNS.xlsx')
+print(data)
+```
+
+```{r}
+# Count the number of rows per ID
+id_counts <- table(data$ID)
+
+# Get the IDs with 96 rows
+ids_to_keep <- names(id_counts[id_counts == 96])
+
+# Subset the data
+subset_data <- data[data$ID %in% ids_to_keep,]
+data <- subset_data
+print(data)
+```
+
+```{r}
+# check for normality
+# Shapiro-Wilk test
+# Assume your data is called "data"
+
+# check for normality of RelFreq
+#shapiro.test(data$RelFreq)
+# Output: p-value < 0.05, reject the null hypothesis of normality
+
+# create a histogram of RelFreq
+hist(data$RelFreq, breaks = 20)
+skewness(data$RelFreq)
+
+# check for normality of S_InvSlope
+# shapiro.test(data$S_InvSlope)
+# Output: p-value < 0.05, reject the null hypothesis of normality
+
+# create a histogram of S_InvSlope
+hist(data$S_InvSlope, breaks = 20)
+skewness(data$S_InvSlope)
+```
+
+```{r}
+# x<-data$RelFreq
+# x_logit <- logit(x)
+# # Apply the sqrt transformation to a variable
+# x_sqrt <- sqrt(x)
+
+# # S_InvSlope is positively skewed
+# data$sqrt_S_InvSlope <- sqrt(data$S_InvSlope)
+# hist(data$sqrt_S_InvSlope, breaks = 20)
+# skewness(data$sqrt_S_InvSlope)
+
+# ggplot(data, aes(x=sqrt_S_InvSlope)) +
+#   geom_density(fill = "lightblue", alpha = 0.5, color = "black") +
+#   labs(x = "sqrt_S_InvSlope", y = "Density") +
+#   theme_minimal() +
+#   geom_vline(aes(xintercept = mean(sqrt_S_InvSlope)), color = "red") 
+
+
+# # Apply a Johnson transformation
+# library(Johnson)
+# x_johnson <- johnsonFit(x)
+# # Check the skewness of the transformed data
+# skewness(x_johnson$y)
+```
+
+```{r}
+
+## comment out
+# apply mixed-effects model
+
+# # Fit a mixed-effects regression model with random intercepts for ID and Trial_ID
+# model <- lmer(S_InvSlope ~ StimCond + RewM + Food + Diff + (1|ID/Trial_ID), data=data)
+
+# # View the summary of the model
+# summary(model)
+# print("........................................................")
+# # anova() tests the significance of the fixed effects
+# anova(model)
+# print("........................................................")
+# # ranova() tests the significance of the random effects
+# ranova(model)
+```
+
+```{r}
+# apply mixed-effects model
+library(lme4)
+library(lmerTest)
+# Fit a mixed-effects regression model with random intercepts for ID and Trial_ID
+Inv_food_model <- lmer(S_InvSlope ~ RewM + Diff + StimSide +(1|ID), data=data[data$Food == 0 & data$StimCond == 1,])
+# View the summary of the model
+summary(Inv_food_model)
+plot(Inv_food_model)
+
+
+effect("StimSide", Inv_food_model)
+plot(effect("StimSide", Inv_food_model))
+
+
+# Fit a mixed-effects regression model with random intercepts for ID and Trial_ID
+Eff_food_model <- lmer(RelFreq ~ RewM + Diff + StimSide +(1|ID), data=data[data$Food == 0 & data$StimCond == 1,])
+# View the summary of the model
+summary(Eff_food_model)
+plot(Eff_food_model)
+
+
+effect("StimSide", Eff_food_model)
+plot(effect("StimSide", Eff_food_model))
+
+```
+
+```{r}
+# apply mixed-effects model
+library(lme4)
+library(lmerTest)
+# Fit a mixed-effects regression model with random intercepts for ID and Trial_ID
+Inv_food_model <- lmer(S_InvSlope ~ RewM + Diff + StimSide +(1|ID), data=data[data$Food == 1 & data$StimCond == 1,])
+# View the summary of the model
+summary(Inv_food_model)
+plot(Inv_food_model)
+
+
+effect("StimSide", Inv_food_model)
+plot(effect("StimSide", Inv_food_model))
+
+
+# Fit a mixed-effects regression model with random intercepts for ID and Trial_ID
+Eff_food_model <- lmer(RelFreq ~ RewM + Diff + StimSide +(1|ID), data=data[data$Food == 1 & data$StimCond == 1,])
+# View the summary of the model
+summary(Eff_food_model)
+plot(Eff_food_model)
+
+
+effect("StimSide", Eff_food_model)
+plot(effect("StimSide", Eff_food_model))
+```
+
+```{r}
+# apply mixed-effects model
+library(lme4)
+library(lmerTest)
+# Fit a mixed-effects regression model with random intercepts for ID and Trial_ID
+Inv_food_model <- lmer(Win ~ RewM + Diff + StimSide + Max_Freq + (1|ID), data=data[data$Food == 0 & data$StimCond == 1,])
+# View the summary of the model
+summary(Inv_food_model)
+plot(Inv_food_model)
+```
+
+```{r}
+# apply mixed-effects model
+library(lme4)
+library(lmerTest)
+# Fit a mixed-effects regression model with random intercepts for ID and Trial_ID
+S_InvSlope_model <- lmer(S_InvSlope ~ StimCond + RewM + Food + Diff + StimSide + (1|ID), data=data)
+# View the summary of the model
+summary(S_InvSlope_model)
+```
+
+```{r}
+library(lme4)
+# Fit the reduced model without the random effect
+reduced_model <- lmer(S_InvSlope ~ StimCond + RewM + Food + Diff + StimSide, data = data)
+
+# Perform the NCV test
+ncv_test <- anova(S_InvSlope_model, reduced_model)
+# Perform NCV test
+AIC(S_InvSlope_model)
+BIC(S_InvSlope_model)
+```
+
+```{r}
+summary(S_InvSlope_model)$coefficients
+print("........................................................")
+# anova() tests the significance of the fixed effects
+anova(S_InvSlope_model)
+print("........................................................")
+# ranova() tests the significance of the random effects
+ranova(S_InvSlope_model)
+print("........................................................")
+
+pvals <- summary(S_InvSlope_model)$coefficients[2:5, "Pr(>|t|)"]
+# names(pvals) <- rownames(summary(model)$coefficients[2:5])
+# barplot(-log10(pvals), ylab = "-log10(p-value)", main = "P-values for fixed effects", ylim=c(0,20))
+
+
+# Use the below graph for something else
+IV <- c("Stim Cond", "Reward Magnitude", "Reward Type", "Difficulty")
+DV <- rep("Invigaration", 4)
+p_values <- data.frame(IV, DV, p_value = -log10(pvals))
+ggplot(p_values, aes(x = p_value, y = reorder(IV, p_value))) +
+  geom_point(aes(color = p_value), size = 3, alpha = 0.8) +
+  facet_wrap(~DV, nrow = 3, scales = "free_y") +
+  scale_color_gradient(low = "magenta", high = "purple") +
+  labs(title = "...",
+       subtitle = "..",
+       x = "log10(p-value)",
+       y = "Invigoration") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 8, angle = 23, hjust = 1)) +
+  geom_vline(xintercept = -log10(0.05), color = "red", linetype = "dashed")
+
+
+ggplot(p_values, aes(x = pvals, y = reorder(IV, pvals))) +
+  geom_col(fill = "#00BFC4", width = 0.5) +
+  geom_text(aes(label = sprintf("%.3f", pvals)), hjust = -0.2, color = "white", size = 4) +
+  scale_x_log10(limits = c(0.00001, 1)) +
+  labs(title = "...",
+       subtitle = "..",
+       x = "log10(p-value)",
+       y = "Invigoration") +
+  theme_minimal()
+```
+
+```{r}
+# Extracting the coefficients from the model
+coefs <- summary(S_InvSlope_model)$coefficients
+plot(S_InvSlope_model)
+
+# Extract the fixed effects coefficients from the summary of the model
+coefs <- summary(S_InvSlope_model)$coefficients[c("StimCond", "RewM", "Food", "Diff","StimSide"), c("Estimate")]
+
+# Calculate the predicted values using the fixed effects coefficients and the values of the independent variables
+predicted_S_InvSlope <- predict(S_InvSlope_model, newdata = data, type = "response")
+
+# Create a new data frame containing the predicted and true values
+df <- data.frame(true = data$S_InvSlope, predicted = predicted_S_InvSlope)
+
+# Create a scatterplot with a line of perfect fit
+ggplot(df, aes(x = predicted_S_InvSlope, y = true)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  labs(x = "Predicted Invigoration Values", y = "True Invigoration Values") +
+  ggtitle("Predicted Invigoration Values vs True Invigoration Values")
+```
+
+
+
+
+
+```{r}
+# Fit the linear mixed effects model
+S_InvSlope_model <- lmer(S_InvSlope ~ StimCond + RewM + Food + Diff + StimSide + (1|ID), data=data)
+
+# extract fixed effects coefficients and standard errors
+coefficients <- summary(S_InvSlope_model)$coefficients[c("StimCond", "RewM", "Food", "Diff","StimSide"), c("Estimate", "Std. Error")]
+# calculate upper and lower bounds for 95% confidence intervals
+lower_bound <- coefficients[, "Estimate"] - 1.96 * coefficients[, "Std. Error"]
+upper_bound <- coefficients[, "Estimate"] + 1.96 * coefficients[, "Std. Error"]
+# add column names to coefficients data frame
+colnames(coefficients) <- c("Estimate", "Std. Error")
+row.names(coefficients) <- c("StimCond", "RewM", "Food", "Diff","StimSide")
+
+# create a data frame for plotting regression line
+regression_df <- data.frame(x = seq(0, 1, 0.1))
+# calculate predicted y values for each x value based on the fixed effects coefficients
+regression_df$y <- coefficients[1, "Estimate"] + coefficients[2, "Estimate"] * regression_df$x +
+                  coefficients[3, "Estimate"] * regression_df$x + coefficients[4, "Estimate"] * regression_df$x
+# calculate upper and lower bounds for 95% confidence intervals of the predicted y values
+regression_df$lower <- lower_bound[1] + lower_bound[2] * regression_df$x +
+                       lower_bound[3] * regression_df$x + lower_bound[4] * regression_df$x
+regression_df$upper <- upper_bound[1] + upper_bound[2] * regression_df$x +
+                       upper_bound[3] * regression_df$x + upper_bound[4] * regression_df$x
+
+# plot regression line with 95% confidence intervals
+ggplot(regression_df, aes(x = x, y = y)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) +
+  geom_line(color = "blue") +
+  labs(title = "Linear Regression Plot", x = "Independent Variable", y = "Dependent Variable")
+
+
+# Extract the coefficients from the model summary
+coefs <- summary(S_InvSlope_model)$coefficients
+plot(S_InvSlope_model)
+
+# Extract fixed effects coefficients and standard errors
+coefficients <- summary(S_InvSlope_model)$coefficients[c("StimCond", "RewM", "Food", "Diff","StimSide"), c("Estimate", "Std. Error")]
+
+# Calculate upper and lower bounds for 95% confidence intervals
+lower_bound <- coefficients[, "Estimate"] - 1.96 * coefficients[, "Std. Error"]
+upper_bound <- coefficients[, "Estimate"] + 1.96 * coefficients[, "Std. Error"]
+
+# Add column names to coefficients data frame
+colnames(coefficients) <- c("Estimate", "Std. Error")
+row.names(coefficients) <- c("StimCond", "RewM", "Food", "Diff","StimSide")
+
+# Create a data frame for plotting regression line
+regression_df <- data.frame(x = seq(0, 1, 0.1))
+
+# Calculate predicted y values for each x value based on the fixed effects coefficients
+regression_df$y <- coefficients[1, "Estimate"] + coefficients[2, "Estimate"] * regression_df$x +
+                  coefficients[3, "Estimate"] * regression_df$x + coefficients[4, "Estimate"] * regression_df$x
+
+# Calculate upper and lower bounds for 95% confidence intervals of the predicted y values
+regression_df$lower <- lower_bound[1] + lower_bound[2] * regression_df$x +
+                       lower_bound[3] * regression_df$x + lower_bound[4] * regression_df$x
+regression_df$upper <- upper_bound[1] + upper_bound[2] * regression_df$x +
+                       upper_bound[3] * regression_df$x + upper_bound[4] * regression_df$x
+
+# Create a plot of the linear mixed effects model regression line and actual data points
+ggplot() +
+  # Add the actual data points to the plot
+  geom_point(data = data, aes(x = ID, y = S_InvSlope)) +
+  # Add the linear mixed effects model regression line to the plot
+  geom_ribbon(data = regression_df, aes(x = x, ymin = lower, ymax = upper), alpha = 0.2) +
+  geom_line(data = regression_df, aes(x = x, y = y), color = "blue") +
+  # Add plot titles and axis labels
+  labs(title = "Linear Mixed Effects Model Regression", x = "StimCond", y = "S_InvSlope")
+
+
+```
+
+```{r}
+library(lmerTest)
+
+# Fit the models
+model1 <- lmer(S_InvSlope ~ StimCond + RewM + Food + Diff + StimSide + (1|ID), data=data)
+model2 <- lmer(S_InvSlope ~ StimCond + RewM + Food + Diff + StimSide + (1|ID/Trial_ID), data=data)
+
+lrt <- anova(model1, model2)
+print(lrt)
+
+AIC_model1 <- AIC(model1)
+AIC_model2 <- AIC(model2)
+print(AIC_model1)
+print(AIC_model2)
+
+BIC_model1 <- BIC(model1)
+BIC_model2 <- BIC(model2)
+print(BIC_model1)
+print(BIC_model2)
+
+```
+
+```{r}
+ggplot(data.frame(resid = resid(S_InvSlope_model), fitted = fitted(S_InvSlope_model)), aes(x = fitted, y = resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed",color="red") +
+  labs(x = "Fitted Values", y = "Residuals")
+```
+This code creates a diagnostic plot for checking the assumption of linearity and constant variance in a linear regression model. It plots the residuals (the difference between the actual values and the predicted values) against the fitted values (the predicted values from the model).
+
+If the assumption of linearity holds, the points should be randomly scattered around the dashed line at y=0, without any clear pattern or trend. If the assumption of constant variance holds, the spread of the points should be roughly equal across the range of fitted values.
+
+Any clear pattern or trend in the points suggests that the assumption of linearity has been violated, while any systematic change in the spread of the points suggests that the assumption of constant variance has been violated. In such cases, the model may need to be revised or transformed before it can be used to make accurate predictions or inferences.
+
+
+
+
+```{r}
+
+effect("StimCond", S_InvSlope_model)
+plot(effect("StimCond", S_InvSlope_model))
+
+effect("StimSide", S_InvSlope_model)
+plot(effect("StimSide", S_InvSlope_model))
+
+```
+
+```{r}
+
+# Fit a mixed-effects regression model with random intercepts for ID 
+RelFreq_model <- lmer(RelFreq ~ StimCond + RewM + Food + Diff + StimSide + (1|ID), data=data)
+# View the summary of the model
+summary(RelFreq_model)
+```
+
+```{r}
+summary(RelFreq_model)$coefficients
+print("........................................................")
+# anova() tests the significance of the fixed effects
+anova(RelFreq_model)
+print("........................................................")
+# ranova() tests the significance of the random effects
+ranova(RelFreq_model)
+print("........................................................")
+```
+
+```{r}
+
+# Extracting the coefficients from the model
+coefs <- summary(RelFreq_model)$coefficients
+plot(RelFreq_model)
+
+# Extract the fixed effects coefficients from the summary of the model
+coefs <- summary(RelFreq_model)$coefficients[c("StimCond", "RewM", "Food", "Diff","StimSide"), c("Estimate")]
+
+# Calculate the predicted values using the fixed effects coefficients and the values of the independent variables
+predicted_RelFreq <- predict(RelFreq_model, newdata = data, type = "response")
+
+# Create a new data frame containing the predicted and true values
+df <- data.frame(true = data$RelFreq, predicted = predicted_RelFreq)
+
+# Create a scatterplot with a line of perfect fit
+ggplot(df, aes(x = predicted_RelFreq, y = true)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  labs(x = "Predicted Effort Maintainance Values", y = "True Effort Maintainance Values")
+```
+
+
+```{r}
+effect("StimCond", RelFreq_model)
+plot(effect("StimCond", RelFreq_model))
+
+effect("StimSide", RelFreq_model)
+plot(effect("StimSide", RelFreq_model))
+```
+
+## TEST SIMULATION EFFECTS ON SUBJECTIVE RATINGS:
+
+
+
+```{r}
+# apply mixed-effects model
+library(lme4)
+library(lmerTest)
+# Fit a mixed-effects regression model with random intercepts for ID and Trial_ID
+Rating_want_model <- lmer(Rating_want ~ StimCond + RewM + Food + Diff + StimSide + (1|ID), data=data)
+# View the summary of the model
+summary(Rating_want_model)
+
+effect("StimCond", Rating_want_model)
+plot(effect("StimCond", Rating_want_model))
+```
+
+```{r}
+summary(Rating_want_model)$coefficients
+print("........................................................")
+# anova() tests the significance of the fixed effects
+anova(Rating_want_model)
+print("........................................................")
+# ranova() tests the significance of the random effects
+ranova(Rating_want_model)
+print("........................................................")
+
+pvals <- summary(Rating_want_model)$coefficients[2:5, "Pr(>|t|)"]
+# names(pvals) <- rownames(summary(model)$coefficients[2:5])
+# barplot(-log10(pvals), ylab = "-log10(p-value)", main = "P-values for fixed effects", ylim=c(0,20))
+
+
+# Use the below graph for something else
+IV <- c("Stim Cond", "Reward Magnitude", "Reward Type", "Difficulty")
+DV <- rep("Wanting Rating", 4)
+p_values <- data.frame(IV, DV, p_value = -log10(pvals))
+ggplot(p_values, aes(x = p_value, y = reorder(IV, p_value))) +
+  geom_point(aes(color = p_value), size = 3, alpha = 0.8) +
+  facet_wrap(~DV, nrow = 3, scales = "free_y") +
+  scale_color_gradient(low = "magenta", high = "purple") +
+  labs(title = "...",
+       subtitle = "..",
+       x = "log10(p-value)",
+       y = "Wanting rating") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 8, angle = 23, hjust = 1)) +
+  geom_vline(xintercept = -log10(0.05), color = "red", linetype = "dashed")
+
+
+ggplot(p_values, aes(x = pvals, y = reorder(IV, pvals))) +
+  geom_col(fill = "#00BFC4", width = 0.5) +
+  geom_text(aes(label = sprintf("%.3f", pvals)), hjust = -0.2, color = "white", size = 4) +
+  scale_x_log10(limits = c(0.00001, 1)) +
+  labs(title = "...",
+       subtitle = "..",
+       x = "log10(p-value)",
+       y = "Wanting rating") +
+  theme_minimal()
+```
+
+```{r}
+# Extracting the coefficients from the model
+coefs <- summary(Rating_want_model)$coefficients
+plot(Rating_want_model)
+
+# Extract the fixed effects coefficients from the summary of the model
+coefs <- summary(Rating_want_model)$coefficients[c("StimCond", "RewM", "Food", "Diff","StimSide"), c("Estimate")]
+
+# Calculate the predicted values using the fixed effects coefficients and the values of the independent variables
+predicted_Rating_want <- predict(Rating_want_model, newdata = data, type = "response")
+
+# Create a new data frame containing the predicted and true values
+df <- data.frame(true = data$Rating_want, predicted = predicted_Rating_want)
+
+# Create a scatterplot with a line of perfect fit
+ggplot(df, aes(x = predicted_Rating_want, y = true)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  labs(x = "Predicted Wanting rating Values", y = "True Wanting rating Values") +
+  ggtitle("Predicted Wanting rating Values vs True Wanting rating Values")
+```
+
+
+```{r}
+# Fit the linear mixed effects model
+Rating_want_model <- lmer(Rating_want ~ StimCond + RewM + Food + Diff + StimSide + (1|ID), data=data)
+
+# extract fixed effects coefficients and standard errors
+coefficients <- summary(Rating_want_model)$coefficients[c("StimCond", "RewM", "Food", "Diff","StimSide"), c("Estimate", "Std. Error")]
+# calculate upper and lower bounds for 95% confidence intervals
+lower_bound <- coefficients[, "Estimate"] - 1.96 * coefficients[, "Std. Error"]
+upper_bound <- coefficients[, "Estimate"] + 1.96 * coefficients[, "Std. Error"]
+# add column names to coefficients data frame
+colnames(coefficients) <- c("Estimate", "Std. Error")
+row.names(coefficients) <- c("StimCond", "RewM", "Food", "Diff","StimSide")
+
+# create a data frame for plotting regression line
+regression_df <- data.frame(x = seq(0, 1, 0.1))
+# calculate predicted y values for each x value based on the fixed effects coefficients
+regression_df$y <- coefficients[1, "Estimate"] + coefficients[2, "Estimate"] * regression_df$x +
+                  coefficients[3, "Estimate"] * regression_df$x + coefficients[4, "Estimate"] * regression_df$x
+# calculate upper and lower bounds for 95% confidence intervals of the predicted y values
+regression_df$lower <- lower_bound[1] + lower_bound[2] * regression_df$x +
+                       lower_bound[3] * regression_df$x + lower_bound[4] * regression_df$x
+regression_df$upper <- upper_bound[1] + upper_bound[2] * regression_df$x +
+                       upper_bound[3] * regression_df$x + upper_bound[4] * regression_df$x
+
+# plot regression line with 95% confidence intervals
+ggplot(regression_df, aes(x = x, y = y)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) +
+  geom_line(color = "blue") +
+  labs(title = "Linear Regression Plot", x = "Independent Variable", y = "Dependent Variable")
+
+
+# Extract the coefficients from the model summary
+coefs <- summary(Rating_want_model)$coefficients
+plot(Rating_want_model)
+
+# Extract fixed effects coefficients and standard errors
+coefficients <- summary(Rating_want_model)$coefficients[c("StimCond", "RewM", "Food", "Diff","StimSide"), c("Estimate", "Std. Error")]
+
+# Calculate upper and lower bounds for 95% confidence intervals
+lower_bound <- coefficients[, "Estimate"] - 1.96 * coefficients[, "Std. Error"]
+upper_bound <- coefficients[, "Estimate"] + 1.96 * coefficients[, "Std. Error"]
+
+# Add column names to coefficients data frame
+colnames(coefficients) <- c("Estimate", "Std. Error")
+row.names(coefficients) <- c("StimCond", "RewM", "Food", "Diff","StimSide")
+
+# Create a data frame for plotting regression line
+regression_df <- data.frame(x = seq(0, 1, 0.1))
+
+# Calculate predicted y values for each x value based on the fixed effects coefficients
+regression_df$y <- coefficients[1, "Estimate"] + coefficients[2, "Estimate"] * regression_df$x +
+                  coefficients[3, "Estimate"] * regression_df$x + coefficients[4, "Estimate"] * regression_df$x
+
+# Calculate upper and lower bounds for 95% confidence intervals of the predicted y values
+regression_df$lower <- lower_bound[1] + lower_bound[2] * regression_df$x +
+                       lower_bound[3] * regression_df$x + lower_bound[4] * regression_df$x
+regression_df$upper <- upper_bound[1] + upper_bound[2] * regression_df$x +
+                       upper_bound[3] * regression_df$x + upper_bound[4] * regression_df$x
+
+# Create a plot of the linear mixed effects model regression line and actual data points
+ggplot() +
+  # Add the actual data points to the plot
+  geom_point(data = data, aes(x = ID, y = Rating_want)) +
+  # Add the linear mixed effects model regression line to the plot
+  geom_ribbon(data = regression_df, aes(x = x, ymin = lower, ymax = upper), alpha = 0.2) +
+  geom_line(data = regression_df, aes(x = x, y = y), color = "blue") +
+  # Add plot titles and axis labels
+  labs(title = "Linear Mixed Effects Model Regression", x = "StimCond", y = "Rating_want")
+
+
+```
+
+
+```{r}
+ggplot(data.frame(resid = resid(Rating_want_model), fitted = fitted(Rating_want_model)), aes(x = fitted, y = resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed",color="red") +
+  labs(x = "Fitted Values", y = "Residuals")
+```
+This code creates a diagnostic plot for checking the assumption of linearity and constant variance in a linear regression model. It plots the residuals (the difference between the actual values and the predicted values) against the fitted values (the predicted values from the model).
+
+If the assumption of linearity holds, the points should be randomly scattered around the dashed line at y=0, without any clear pattern or trend. If the assumption of constant variance holds, the spread of the points should be roughly equal across the range of fitted values.
+
+Any clear pattern or trend in the points suggests that the assumption of linearity has been violated, while any systematic change in the spread of the points suggests that the assumption of constant variance has been violated. In such cases, the model may need to be revised or transformed before it can be used to make accurate predictions or inferences.
+
+
+
+
+```{r}
+
+effect("StimCond", Rating_want_model)
+plot(effect("StimCond", Rating_want_model))
+
+effect("StimSide", Rating_want_model)
+plot(effect("StimSide", Rating_want_model))
+
+```
+
+```{r}
+
+# Fit a mixed-effects regression model with random intercepts for ID 
+Rating_exh_model <- lmer(Rating_exh ~ StimCond + RewM + Food + Diff + StimSide + (1|ID), data=data)
+# View the summary of the model
+summary(Rating_exh_model)
+```
+
+```{r}
+summary(Rating_exh_model)$coefficients
+print("........................................................")
+# anova() tests the significance of the fixed effects
+anova(Rating_exh_model)
+print("........................................................")
+# ranova() tests the significance of the random effects
+ranova(Rating_exh_model)
+print("........................................................")
+```
+
+```{r}
+
+# Extracting the coefficients from the model
+coefs <- summary(Rating_exh_model)$coefficients
+plot(Rating_exh_model)
+
+# Extract the fixed effects coefficients from the summary of the model
+coefs <- summary(Rating_exh_model)$coefficients[c("StimCond", "RewM", "Food", "Diff","StimSide"), c("Estimate")]
+
+# Calculate the predicted values using the fixed effects coefficients and the values of the independent variables
+predicted_Rating_exh <- predict(Rating_exh_model, newdata = data, type = "response")
+
+# Create a new data frame containing the predicted and true values
+df <- data.frame(true = data$Rating_exh, predicted = predicted_Rating_exh)
+
+# Create a scatterplot with a line of perfect fit
+ggplot(df, aes(x = predicted_Rating_exh, y = true)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  labs(x = "Predicted Exh ratings Values", y = "True Exh ratings Values")
+```
+
+
+```{r}
+effect("StimCond", Rating_exh_model)
+plot(effect("StimCond", Rating_exh_model))
+
+effect("StimSide", Rating_exh_model)
+plot(effect("StimSide", Rating_exh_model))
+```
+
+
+```{r}
+
+# data_update_1 <- data[, -4]
+data_update_1 <- data[, -c(1,2,3,17,18,19,20,21,22,23,24)]
+
+data_update_1[is.na(data_update_1)] <- -1
+data_update_1 <- as.data.frame(lapply(data_update_1, as.numeric))
+data_update_1 <- na.aggregate(data_update_1, FUN = median)
+cor_data <- cor(data_update_1)
+melt_data_update <- melt(cor_data, varnames = c("Variable1", "Variable2"))
+melt_data_update <- melt_data_update[order(-melt_data_update$value), ]
+
+# plot heatmap
+ggplot(melt_data_update, aes(x = Variable1, y = Variable2)) +
+  geom_tile(aes(fill = value), color = "white") +
+  scale_fill_gradient2(low = "#2166ac", mid = "white", high = "#b2182b",
+  midpoint = 0, na.value = "gray") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 5.5),
+    axis.text.y = element_text(angle = 0, hjust = 1, vjust = 0.5, size = 5.5),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14)
+  ) +
+  labs(
+    x = "Variable",
+    y = "Variable",
+    fill = "Correlation"
+  )
+```
+
+
+
+```{r}
+# fit robust regression model
+robust_model <- rlm(S_InvSlope ~ Rating_want, data=data)
+
+# print model summary
+summary(robust_model)
+
+# create a scatterplot with regression line
+ggplot(data, aes(x=Rating_want, y=S_InvSlope)) + 
+  geom_point() +
+  geom_smooth(method="rlm", formula=y~x, se=TRUE, col="red", size=1.5) +
+  labs(x="Wanting Rating", y="Invigoration") +
+  theme_minimal()
+```
+
+
+```{r}
+
+updated_data <-data
+# calculate group-level means and standard deviations for wanting ratings
+rating_means <- aggregate(updated_data$Rating_want, by=list(updated_data$ID), mean)
+rating_sds <- aggregate(updated_data$Rating_want, by=list(updated_data$ID), sd)
+
+# set lower and upper bounds for wanting ratings based on the group-level means and standard deviations
+lower_bound <- rating_means$x - 0.5 * rating_sds$x
+upper_bound <- rating_means$x + 0.5 * rating_sds$x
+
+# subset the data to include only wanting ratings within the lower and upper bounds for each group
+updated_data <- updated_data[updated_data$Rating_want >= lower_bound[match(updated_data$ID, rating_means$Group)] & 
+               updated_data$Rating_want <= upper_bound[match(updated_data$ID, rating_means$Group)], ]
+
+# fit robust regression model at the group level
+robust_model <- lm(S_InvSlope ~ Rating_want + ID, data=updated_data)
+
+# print model summary
+summary(robust_model)
+
+# create a scatterplot with regression lines for each group
+ggplot(data, aes(x=Rating_want, y=S_InvSlope, color=ID)) + 
+  geom_point() +
+  geom_smooth(method="rlm", formula=y~x, se=TRUE, col="red", size=1.5) +
+  labs(x="Wanting Rating", y="Invigoration", color="Group") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(data, aes(x = Rating_want, y = S_InvSlope, color = S_InvSlope)) +
+  geom_point() +
+  geom_smooth(method = "rlm", se = FALSE) +
+  labs(x = "Rating_want", y = "S_InvSlope", title = "Interaction plot of S_InvSlope and Rating_want")
+
+```
+
+
+```{r}
+ggplot(data, aes(x = factor(StimCond), y = Win)) +
+  geom_boxplot() +
+  labs(x = "Stimulus Condition", y = "Win")
+```
+
+
+```{r}
+# Create a subset of the data for StimCond=0
+data_stim0 <- subset(data, StimCond == 0)
+
+# Create a subset of the data for StimCond=1
+data_stim1 <- subset(data, StimCond == 1)
+
+# Create overlapping density plots using ggplot2
+ggplot() +
+  geom_density(data = data_stim0, aes(x = Win, colour = "StimCond=0", fill = "StimCond=0"), alpha = 0.6) +
+  geom_density(data = data_stim1, aes(x = Win, colour = "StimCond=1", fill = "StimCond=1"), alpha = 0.6) +
+  scale_colour_manual(values = c("#006699", "#ff6600"), name = "Stimulus Condition") +
+  scale_fill_manual(values = c("#cce5ff", "#ffd1b3"), name = "Stimulus Condition") +
+  labs(x = "Win", y = "Density", title = "Overlapping Density Plots for Win by Stimulus Condition") +
+  theme_classic() +
+  theme(legend.position = "top")
+
+```
+
+
+```{r}
+# Create a subset of the data for StimCond=0
+data_stim0 <- subset(data, StimCond == 0)
+
+# Create a subset of the data for StimCond=1
+data_stim1 <- subset(data, StimCond == 1)
+
+# Create overlapping density plots using ggplot2
+ggplot() +
+  geom_density(data = data_stim0, aes(x = Work, colour = "StimCond=0", fill = "StimCond=0"), alpha = 0.6) +
+  geom_density(data = data_stim1, aes(x = Work, colour = "StimCond=1", fill = "StimCond=1"), alpha = 0.6) +
+  scale_colour_manual(values = c("#006699", "#ff6600"), name = "Stimulus Condition") +
+  scale_fill_manual(values = c("#cce5ff", "#ffd1b3"), name = "Stimulus Condition") +
+  labs(x = "Work", y = "Density", title = "Overlapping Density Plots for Work by Stimulus Condition") +
+  theme_classic() +
+  theme(legend.position = "top")
+
+```
+
+```{r}
+# Create a subset of the data for StimCond=0
+data_stim0 <- subset(data, StimCond == 0)
+
+# Create a subset of the data for StimCond=1
+data_stim1 <- subset(data, StimCond == 1)
+
+# Create overlapping density plots using ggplot2
+ggplot() +
+  geom_density(data = data_stim0, aes(x = RelFreq, colour = "StimCond=0", fill = "StimCond=0"), alpha = 0.6) +
+  geom_density(data = data_stim1, aes(x = RelFreq, colour = "StimCond=1", fill = "StimCond=1"), alpha = 0.6) +
+  scale_colour_manual(values = c("#006699", "#ff6600"), name = "Stimulus Condition") +
+  scale_fill_manual(values = c("#cce5ff", "#ffd1b3"), name = "Stimulus Condition") +
+  labs(x = "RelFreq", y = "Density", title = "Overlapping Density Plots for Relative Freq by Stimulus Condition") +
+  theme_classic() +
+  theme(legend.position = "top")
+
+```
+
+```{r}
+# Create a subset of the data for StimCond=0
+data_stim0 <- subset(data, StimCond == 0)
+
+# Create a subset of the data for StimCond=1
+data_stim1 <- subset(data, StimCond == 1)
+
+# Create overlapping density plots using ggplot2
+ggplot() +
+  geom_density(data = data_stim0, aes(x = S_InvSlope, colour = "StimCond=0", fill = "StimCond=0"), alpha = 0.6) +
+  geom_density(data = data_stim1, aes(x = S_InvSlope, colour = "StimCond=1", fill = "StimCond=1"), alpha = 0.6) +
+  scale_colour_manual(values = c("#006699", "#ff6600"), name = "Stimulus Condition") +
+  scale_fill_manual(values = c("#cce5ff", "#ffd1b3"), name = "Stimulus Condition") +
+  labs(x = "Invigoration", y = "Density", title = "Overlapping Density Plots for Invigoration by Stimulus Condition") +
+  theme_classic() +
+  theme(legend.position = "top")
+
+```
+
+
+```{r}
+df <-data
+# Create a subset of data for StimCond=0 and StimCond=1
+df0 <- subset(df, StimCond == 0)
+df1 <- subset(df, StimCond == 1)
+
+# Create a list of variables to plot
+vars <- c("S_InvSlope", "RelFreq", "Win", "Work")
+
+# Create a function to plot multiple violin plots
+plot_violin <- function(df, var) {
+  ggplot(df, aes(x = factor(StimCond), y = df[[var]], fill = factor(StimCond))) +
+    geom_violin() +
+    geom_boxplot(width = 0.1, outlier.shape = NA, alpha = 0.5) +
+    scale_fill_discrete(name = "StimCond") +
+    labs(x = "StimCond", y = var) +
+    ggtitle(paste("Violin plot of", var, "by StimCond"))
+}
+
+# Create a list of plots
+plots <- lapply(vars, function(var) plot_violin(df, var))
+
+# Combine the plots
+gridExtra::grid.arrange(grobs = plots, ncol = 2)
+
+```
